@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <!-- Meta tag viewport essencial para responsividade em dispositivos móveis -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Tarefas - To-Do App</title>
+    <!-- Google Fonts para um visual moderno -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para ícones limpos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0078d4; /* Azul estilo Microsoft */
+            --primary-hover: #106ebe;
+            --bg-color: #f3f2f1;
+            --card-bg: #ffffff;
+            --text-main: #323130;
+            --text-muted: #605e5c;
+            --border-color: #edebe9;
+            --danger-color: #a80000;
+            --success-color: #107c10;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Container principal adaptável (vira tela cheia no mobile, card flutuante no PC) */
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (min-width: 640px) {
+            .app-container {
+                min-height: 85vh;
+                margin-top: 5vh;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+        }
+
+        /* Cabeçalho do App */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: white;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        /* Área do Input (Touch-friendly: mínima altura de 48px/50px) */
+        .input-section {
+            padding: 16px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 50px;
+            padding: 0 16px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            background-color: #faf9f8;
+            transition: all 0.2s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-color);
+            background-color: #fff;
+        }
+
+        /* Botão Touch-friendly com área ampla de toque */
+        .btn-add {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+
+        .btn-add:active {
+            background-color: var(--primary-hover);
+            transform: scale(0.96);
+        }
+
+        /* Lista de Tarefas */
+        .task-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 20px 20px 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #c8c6c4;
+        }
+
+        /* Item da Tarefa (Estilo Nativo Mobile) */
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #fff;
+            padding: 12px 14px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+
+        .task-item:active {
+            background-color: #faf9f8;
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        /* Checkbox Customizado Grande (Fácil de tocar) */
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .task-item.completed .task-checkbox {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .task-item.completed .task-checkbox i {
+            font-size: 0.75rem;
+            display: block;
+        }
+
+        .task-checkbox i {
+            display: none;
+        }
+
+        .task-text {
+            font-size: 1rem;
+            color: var(--text-main);
+            word-break: break-word;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+
+        /* Estado Concluído (Riscar texto) */
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Botão de Excluir (Amplo para toque) */
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #a19f9d;
+            font-size: 1.1rem;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .btn-delete:hover, .btn-delete:active {
+            color: var(--danger-color);
+            background-color: #fdf3f2;
+        }
+
+        /* Rodapé com contador */
+        footer {
+            padding: 12px 20px;
+            background-color: #faf9f8;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Cabeçalho -->
+        <header>
+            <h1>Meu Dia</h1>
+            <p id="current-date">Carregando data...</p>
+        </header>
+
+        <!-- Seção de Entrada de Texto -->
+        <div class="input-section">
+            <div class="input-wrapper">
+                <input type="text" id="taskInput" placeholder="Adicionar uma tarefa..." autocomplete="off">
+            </div>
+            <button class="btn-add" id="addTaskBtn" aria-label="Adicionar Tarefa">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Lista -->
+        <div class="task-list-container">
+            <div id="taskList"></div>
+            <!-- Estado Vazio -->
+            <div id="emptyState" class="empty-state">
+                <i class="fa-regular fa-face-smile"></i>
+                <p>Tudo limpo por aqui! Aproveite o seu dia.</p>
+            </div>
+        </div>
+
+        <!-- Rodapé Dinâmico -->
+        <footer>
+            <span id="taskCount">0 tarefas pendentes</span>
+            <span id="clearCompleted" style="cursor: pointer; display: none;">Limpar concluídas</span>
+        </footer>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const taskInput = document.getElementById('taskInput');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const taskList = document.getElementById('taskList');
+        const emptyState = document.getElementById('emptyState');
+        const taskCount = document.getElementById('taskCount');
+        const currentDateEl = document.getElementById('current-date');
+        const clearCompletedBtn = document.getElementById('clearCompleted');
+
+        // Estado do App (Carrega do localStorage se houver)
+        let tasks = JSON.parse(localStorage.getItem('todo_tasks')) || [];
+
+        // Exibir data atual formatada
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        const todayStr = new Date().toLocaleDateString('pt-BR', options);
+        currentDateEl.textContent = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
+
+        // Salvar tarefas
+        function saveTasks() {
+            localStorage.setItem('todo_tasks', JSON.stringify(tasks));
+        }
+
+        // Renderizar a interface
+        function renderTasks() {
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                emptyState.style.display = 'flex';
+                clearCompletedBtn.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                
+                // Verifica se há alguma tarefa concluída para mostrar o botão de limpar
+                const hasCompleted = tasks.some(t => t.completed);
+                clearCompletedBtn.style.display = hasCompleted ? 'inline' : 'none';
+
+                tasks.forEach((task, index) => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+                    
+                    taskItem.innerHTML = `
+                        <div class="task-content" onclick="toggleTask(${index})">
+                            <div class="task-checkbox">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="task-text">${escapeHTML(task.text)}</span>
+                        </div>
+                        <button class="btn-delete" onclick="deleteTask(event, ${index})" aria-label="Excluir tarefa">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                    taskList.appendChild(taskItem);
+                });
+            }
+
+            // Atualizar contador de pendentes
+            const pendingCount = tasks.filter(t => !t.completed).length;
+            taskCount.textContent = `${pendingCount} ${pendingCount === 1 ? 'tarefa pendente' : 'tarefas pendentes'}`;
+        }
+
+        // Adicionar nova tarefa
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (text === '') return;
+
+            tasks.unshift({ text: text, completed: false }); // Adiciona no topo estilo MS To-Do
+            taskInput.value = '';
+            saveTasks();
+            renderTasks();
+            taskInput.focus();
+        }
+
+        // Alternar estado de conclusão (riscar/concluir)
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
+        }
+
+        // Excluir tarefa unitária
+        function deleteTask(event, index) {
+            event.stopPropagation(); // Evita acionar o toggle junto
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Limpar tarefas concluídas
+        clearCompletedBtn.addEventListener('click', () => {
+            tasks = tasks.filter(t => !t.completed);
+            saveTasks();
+            renderTasks();
+        });
+
+        // Event Listeners
+        addTaskBtn.addEventListener('click', addTask);
+        
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Segurança básica contra XSS
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        // Inicialização
+        renderTasks();
+    </script>
+</body>
+</html>
